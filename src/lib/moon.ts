@@ -1,8 +1,16 @@
 import swisseph from 'swisseph';
 import { longitudeToSign } from './ephemeris';
-import type { MoonPhaseResult, MoonPhaseName, VoidOfCourseResult, ZodiacSign, AspectType } from '@/types/astrology';
+import type { MoonPhaseResult, MoonPhaseName, VoidOfCourseResult, AspectType } from '@/types/astrology';
 
 const FLAGS = swisseph.SEFLG_MOSEPH | swisseph.SEFLG_SPEED;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function calcUt(jd: number, planet: number): any {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const r = swisseph.swe_calc_ut(jd, planet, FLAGS) as any;
+  if (r.error) throw new Error(`swe_calc_ut failed: ${r.error}`);
+  return r;
+}
 
 function dateToJulianDay(date: Date): number {
   const y = date.getUTCFullYear();
@@ -13,21 +21,21 @@ function dateToJulianDay(date: Date): number {
 }
 
 function julianDayToDate(jd: number): Date {
-  const result = swisseph.swe_jdut1_to_utc(jd, swisseph.SE_GREG_CAL);
-  return new Date(Date.UTC(result.year, result.month - 1, result.day,
-    result.hour, result.minute, Math.floor(result.second)));
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const result = swisseph.swe_jdut1_to_utc(jd, swisseph.SE_GREG_CAL) as any;
+  return new Date(Date.UTC(
+    result.year, result.month - 1, result.day,
+    result.hour, result.minute, Math.floor(result.second),
+  ));
 }
 
 function getSunMoonLongitudes(jd: number): { sun: number; moon: number; moonSpeed: number } {
-  const sunResult = swisseph.swe_calc_ut(jd, swisseph.SE_SUN, FLAGS);
-  const moonResult = swisseph.swe_calc_ut(jd, swisseph.SE_MOON, FLAGS);
-  if ('error' in sunResult || 'error' in moonResult) {
-    throw new Error('swisseph calculation failed');
-  }
+  const sunResult = calcUt(jd, swisseph.SE_SUN);
+  const moonResult = calcUt(jd, swisseph.SE_MOON);
   return {
-    sun: sunResult.longitude,
-    moon: moonResult.longitude,
-    moonSpeed: moonResult.longitudeSpeed,
+    sun: sunResult.longitude as number,
+    moon: moonResult.longitude as number,
+    moonSpeed: moonResult.longitudeSpeed as number,
   };
 }
 
@@ -53,12 +61,9 @@ function nextPhaseBoundaryJd(jd: number, currentElong: number): { name: MoonPhas
     'full_moon', 'waning_gibbous', 'last_quarter', 'waning_crescent', 'new_moon',
   ];
 
-  // Find next boundary after currentElong
   const next = boundaries.find((b) => b > currentElong) ?? 360;
   const nextIndex = boundaries.indexOf(next);
   const nextName = names[nextIndex];
-
-  // Estimate: moon moves ~13.2°/day relative to sun
   const daysUntil = (next - currentElong) / 13.2;
   return { name: nextName, jd: jd + daysUntil };
 }
@@ -103,65 +108,48 @@ function angularDist(a: number, b: number): number {
   return d > 180 ? 360 - d : d;
 }
 
-// Void of course: Moon has made its last Ptolemaic aspect in its current sign
-// and has not yet entered the next sign.
+// Void of course: Moon has made its last Ptolemaic aspect before leaving its current sign.
 export function isVoidOfCourse(datetime: Date | string): VoidOfCourseResult {
   const date = typeof datetime === 'string' ? new Date(datetime) : datetime;
   const jd = dateToJulianDay(date);
 
-  const moonResult = swisseph.swe_calc_ut(jd, swisseph.SE_MOON, FLAGS);
-  if ('error' in moonResult) throw new Error('Moon calculation failed');
-
-  const moonLon = moonResult.longitude;
-  const moonSpeed = moonResult.longitudeSpeed;
+  const moonResult = calcUt(jd, swisseph.SE_MOON);
+  const moonLon: number = moonResult.longitude;
+  const moonSpeed: number = moonResult.longitudeSpeed;
   const moonSign = longitudeToSign(moonLon).sign;
 
-  // Degrees remaining in current sign
   const moonSignDeg = moonLon % 30;
   const degsRemainingInSign = 30 - moonSignDeg;
-
-  // Check if Moon will form any more Ptolemaic aspects before leaving its sign
-  // We step forward in small increments checking aspects
-  let willFormAspect = false;
-  let voidEndJd: number | null = null;
-
-  // Time for moon to leave sign at current speed
   const daysToSignChange = degsRemainingInSign / (moonSpeed > 0 ? moonSpeed : 13.2);
   const signChangeJd = jd + daysToSignChange;
 
-  // Check every 2 hours until sign change
+  let willFormAspect = false;
   const stepDays = 2 / 24;
-  for (let checkJd = jd + stepDays; checkJd < signChangeJd; checkJd += stepDays) {
-    const mResult = swisseph.swe_calc_ut(checkJd, swisseph.SE_MOON, FLAGS);
-    if ('error' in mResult) continue;
-    const checkMoonLon = mResult.longitude;
-    const checkMoonSign = longitudeToSign(checkMoonLon).sign;
-    if (checkMoonSign !== moonSign) break;
+
+  outer: for (let checkJd = jd + stepDays; checkJd < signChangeJd; checkJd += stepDays) {
+    let mResult: { longitude: number } | null = null;
+    try { mResult = calcUt(checkJd, swisseph.SE_MOON); } catch { continue; }
+    if (!mResult) continue;
+    const checkMoonLon: number = mResult.longitude;
+    if (longitudeToSign(checkMoonLon).sign !== moonSign) break;
 
     for (const planetId of OTHER_PLANETS) {
-      const pResult = swisseph.swe_calc_ut(checkJd, planetId, FLAGS);
-      if ('error' in pResult) continue;
-      const pLon = pResult.longitude;
+      let pResult: { longitude: number } | null = null;
+      try { pResult = calcUt(checkJd, planetId); } catch { continue; }
+      if (!pResult) continue;
+      const pLon: number = pResult.longitude;
       const dist = angularDist(checkMoonLon, pLon);
       for (const { angle } of ASPECT_ANGLES) {
         if (Math.abs(dist - angle) <= MOON_ORB) {
           willFormAspect = true;
-          break;
+          break outer;
         }
       }
-      if (willFormAspect) break;
     }
-    if (willFormAspect) break;
-  }
-
-  const isVoid = !willFormAspect;
-
-  if (isVoid) {
-    voidEndJd = signChangeJd;
   }
 
   return {
-    isVoid,
-    untilDatetime: isVoid && voidEndJd ? julianDayToDate(voidEndJd).toISOString() : null,
+    isVoid: !willFormAspect,
+    untilDatetime: !willFormAspect ? julianDayToDate(signChangeJd).toISOString() : null,
   };
 }

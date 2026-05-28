@@ -53,11 +53,12 @@ function dateToJulianDay(date: Date): number {
 }
 
 function computePlanet(jd: number, id: number): { longitude: number; speed: number } {
-  const result = swisseph.swe_calc_ut(jd, id, FLAGS);
-  if ('error' in result) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const result = swisseph.swe_calc_ut(jd, id, FLAGS) as any;
+  if (result.error) {
     throw new Error(`swisseph error for planet ${id}: ${result.error}`);
   }
-  return { longitude: result.longitude, speed: result.longitudeSpeed };
+  return { longitude: result.longitude as number, speed: result.longitudeSpeed as number };
 }
 
 export function computeChart({
@@ -72,22 +73,25 @@ export function computeChart({
   const date = typeof datetime === 'string' ? new Date(datetime) : datetime;
   const jd = dateToJulianDay(date);
 
-  // Compute ascendant via ARMC
-  const houses = swisseph.swe_houses(jd, FLAGS, latitude, longitude, 'W');
-  // 'W' = Whole Sign, but swisseph house computation still gives us the ascendant degree
-  // We use the ascendant longitude to determine the rising sign
-  const ascLon: number = houses.ascendant;
-  const ascInfo = longitudeToSign(ascLon);
+  // swe_houses(jd, geolat, geolon, hsys) — 'W' = Whole Sign
+  // This gives us the ascendant and MC longitudes even in Whole Sign mode
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const houses = swisseph.swe_houses(jd, latitude, longitude, 'W') as any;
+  if (houses.error) {
+    throw new Error(`swe_houses error: ${houses.error}`);
+  }
 
+  const ascLon: number = houses.ascendant;
   const mcLon: number = houses.mc;
-  const mcInfo = longitudeToSign(mcLon);
+  const { sign: ascSign, signDegree: ascDegree } = longitudeToSign(ascLon);
+  const { sign: mcSign, signDegree: mcDegree } = longitudeToSign(mcLon);
 
   const planets: Partial<Record<PlanetName, PlanetData>> = {};
 
   for (const [name, id] of Object.entries(PLANET_IDS) as [PlanetName, number][]) {
     const { longitude: lon, speed } = computePlanet(jd, id);
     const { sign, signDegree } = longitudeToSign(lon);
-    const house = computeWholeSignHouse(sign, ascInfo.sign);
+    const house = computeWholeSignHouse(sign, ascSign);
 
     planets[name] = {
       sign,
@@ -102,8 +106,8 @@ export function computeChart({
   return {
     datetime: date.toISOString(),
     location: { lat: latitude, lon: longitude, label: '' },
-    ascendant: ascInfo,
-    midheaven: mcInfo,
+    ascendant: { sign: ascSign, degree: ascDegree },
+    midheaven: { sign: mcSign, degree: mcDegree },
     planets: planets as Record<PlanetName, PlanetData>,
   };
 }

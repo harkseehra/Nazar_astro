@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { computeChart, computeAspects, moonPhase, isVoidOfCourse } from '@/lib/ephemeris';
+import { generateInterpretations } from '@/lib/interpret/claudeClient';
 import type { TodayJson, PlanetName } from '@/types/astrology';
 
 // Vercel cron auth — only Vercel scheduler should call this
@@ -37,7 +38,7 @@ export async function GET(request: Request) {
     const phase = moonPhase(snapshotDate);
     const voc = isVoidOfCourse(snapshotDate);
 
-    // Strip 'house' from planet data — house is user-location-specific
+    // Strip 'house' — house is recomputed client-side per user location
     const planets = Object.fromEntries(
       Object.entries(chart.planets).map(([name, data]) => {
         const { house: _house, ...rest } = data;
@@ -52,6 +53,14 @@ export async function GET(request: Request) {
     const validUntil = new Date(snapshotDate);
     validUntil.setUTCDate(validUntil.getUTCDate() + 1);
 
+    // Generate Claude interpretations — fails gracefully, never breaks the chart
+    const interpretations = await generateInterpretations(
+      chart,
+      aspects,
+      snapshotDate,
+      retrogrades,
+    );
+
     const today: TodayJson = {
       generatedAt: snapshotDate.toISOString(),
       validUntil: validUntil.toISOString(),
@@ -64,10 +73,7 @@ export async function GET(request: Request) {
         nextVoidEnd: voc.isVoid ? voc.untilDatetime : null,
       },
       retrogrades,
-      interpretations: {
-        overall: '',
-        topAspect: '',
-      },
+      interpretations,
     };
 
     const dataDir = join(process.cwd(), 'public', 'data');
