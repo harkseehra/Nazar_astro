@@ -1,4 +1,4 @@
-import swisseph from 'swisseph';
+import * as Astronomy from 'astronomy-engine';
 import { computeWholeSignHouse } from './houses';
 import { computeAspects as _computeAspects } from './aspects';
 import { moonPhase as _moonPhase, isVoidOfCourse as _isVoidOfCourse } from './moon';
@@ -12,24 +12,21 @@ import type {
   VoidOfCourseResult,
 } from '@/types/astrology';
 
-// Moshier analytical ephemeris — no data files required
-const FLAGS = swisseph.SEFLG_MOSEPH | swisseph.SEFLG_SPEED;
-
-const PLANET_IDS: Record<PlanetName, number> = {
-  sun: swisseph.SE_SUN,
-  moon: swisseph.SE_MOON,
-  mercury: swisseph.SE_MERCURY,
-  venus: swisseph.SE_VENUS,
-  mars: swisseph.SE_MARS,
-  jupiter: swisseph.SE_JUPITER,
-  saturn: swisseph.SE_SATURN,
-};
-
 const SIGNS: ZodiacSign[] = [
   'aries', 'taurus', 'gemini', 'cancer',
   'leo', 'virgo', 'libra', 'scorpio',
   'sagittarius', 'capricorn', 'aquarius', 'pisces',
 ];
+
+const BODIES: Record<PlanetName, Astronomy.Body> = {
+  sun:     Astronomy.Body.Sun,
+  moon:    Astronomy.Body.Moon,
+  mercury: Astronomy.Body.Mercury,
+  venus:   Astronomy.Body.Venus,
+  mars:    Astronomy.Body.Mars,
+  jupiter: Astronomy.Body.Jupiter,
+  saturn:  Astronomy.Body.Saturn,
+};
 
 export function longitudeToSign(lon: number): { sign: ZodiacSign; signDegree: number } {
   const normalized = ((lon % 360) + 360) % 360;
@@ -44,21 +41,55 @@ export function signIndex(sign: ZodiacSign): number {
   return SIGNS.indexOf(sign);
 }
 
-function dateToJulianDay(date: Date): number {
-  const y = date.getUTCFullYear();
-  const m = date.getUTCMonth() + 1;
-  const d = date.getUTCDate();
-  const h = date.getUTCHours() + date.getUTCMinutes() / 60 + date.getUTCSeconds() / 3600;
-  return swisseph.swe_julday(y, m, d, h, swisseph.SE_GREG_CAL);
+function tropicalLongitude(body: Astronomy.Body, date: Date): number {
+  const vec = Astronomy.GeoVector(body, date, true);
+  const rot = Astronomy.Rotation_EQJ_ECT(date);
+  const ecl = Astronomy.RotateVector(rot, vec);
+  return (Math.atan2(ecl.y, ecl.x) * 180 / Math.PI + 360) % 360;
 }
 
-function computePlanet(jd: number, id: number): { longitude: number; speed: number } {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const result = swisseph.swe_calc_ut(jd, id, FLAGS) as any;
-  if (result.error) {
-    throw new Error(`swisseph error for planet ${id}: ${result.error}`);
-  }
-  return { longitude: result.longitude as number, speed: result.longitudeSpeed as number };
+function planetSpeed(body: Astronomy.Body, date: Date): number {
+  const dt = 0.01; // days ≈ 14.4 minutes, small enough for precision
+  const t1 = new Date(date.getTime() - dt * 0.5 * 86400000);
+  const t2 = new Date(date.getTime() + dt * 0.5 * 86400000);
+  const lon1 = tropicalLongitude(body, t1);
+  const lon2 = tropicalLongitude(body, t2);
+  let diff = lon2 - lon1;
+  if (diff > 180) diff -= 360;
+  if (diff < -180) diff += 360;
+  return diff / dt;
+}
+
+function computeAscendantLon(date: Date, lat: number, lon: number): number {
+  const gast = Astronomy.SiderealTime(date); // GAST in hours
+  const lst = ((gast + lon / 15) % 24 + 24) % 24;
+  const ramc = lst * 15; // degrees
+
+  const tilt = Astronomy.e_tilt(Astronomy.MakeTime(date));
+  const eps = tilt.tobl; // true obliquity in degrees
+
+  const ramcRad = ramc * Math.PI / 180;
+  const epsRad = eps * Math.PI / 180;
+  const latRad = lat * Math.PI / 180;
+
+  return (Math.atan2(
+    Math.cos(ramcRad),
+    -(Math.sin(ramcRad) * Math.cos(epsRad) + Math.tan(latRad) * Math.sin(epsRad))
+  ) * 180 / Math.PI + 360) % 360;
+}
+
+function computeMidheavenLon(date: Date, lon: number): number {
+  const gast = Astronomy.SiderealTime(date);
+  const lst = ((gast + lon / 15) % 24 + 24) % 24;
+  const ramc = lst * 15;
+
+  const tilt = Astronomy.e_tilt(Astronomy.MakeTime(date));
+  const eps = tilt.tobl;
+
+  const ramcRad = ramc * Math.PI / 180;
+  const epsRad = eps * Math.PI / 180;
+
+  return (Math.atan2(Math.sin(ramcRad), Math.cos(ramcRad) * Math.cos(epsRad)) * 180 / Math.PI + 360) % 360;
 }
 
 export function computeChart({
@@ -71,25 +102,17 @@ export function computeChart({
   longitude: number;
 }): ChartSnapshot {
   const date = typeof datetime === 'string' ? new Date(datetime) : datetime;
-  const jd = dateToJulianDay(date);
 
-  // swe_houses(jd, geolat, geolon, hsys) — 'W' = Whole Sign
-  // This gives us the ascendant and MC longitudes even in Whole Sign mode
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const houses = swisseph.swe_houses(jd, latitude, longitude, 'W') as any;
-  if (houses.error) {
-    throw new Error(`swe_houses error: ${houses.error}`);
-  }
-
-  const ascLon: number = houses.ascendant;
-  const mcLon: number = houses.mc;
+  const ascLon = computeAscendantLon(date, latitude, longitude);
+  const mcLon = computeMidheavenLon(date, longitude);
   const { sign: ascSign, signDegree: ascDegree } = longitudeToSign(ascLon);
   const { sign: mcSign, signDegree: mcDegree } = longitudeToSign(mcLon);
 
   const planets: Partial<Record<PlanetName, PlanetData>> = {};
 
-  for (const [name, id] of Object.entries(PLANET_IDS) as [PlanetName, number][]) {
-    const { longitude: lon, speed } = computePlanet(jd, id);
+  for (const [name, body] of Object.entries(BODIES) as [PlanetName, Astronomy.Body][]) {
+    const lon = tropicalLongitude(body, date);
+    const speed = planetSpeed(body, date);
     const { sign, signDegree } = longitudeToSign(lon);
     const house = computeWholeSignHouse(sign, ascSign);
 
