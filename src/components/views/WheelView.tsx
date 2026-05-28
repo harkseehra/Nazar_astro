@@ -12,7 +12,7 @@ const PLANETS: PlanetName[] = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupit
 
 interface Props {
   data: TodayJson;
-  houses: Partial<Record<PlanetName, number>>;
+  houses?: Partial<Record<PlanetName, number>>;
   ascendantSign?: ZodiacSign;
   onSelectPlanet: (p: PlanetName) => void;
   selectedPlanet: PlanetName | null;
@@ -36,7 +36,7 @@ function polarToXY(angleDeg: number, r: number): [number, number] {
   return [CX + r * Math.cos(rad), CY - r * Math.sin(rad)];
 }
 
-export function WheelView({ data, houses, ascendantSign, onSelectPlanet, selectedPlanet }: Props) {
+export function WheelView({ data, ascendantSign, onSelectPlanet, selectedPlanet }: Props) {
   // Ascendant absolute longitude: derive from sign start
   const ascSignIdx = ascendantSign ? SIGNS.indexOf(ascendantSign) : 0;
   const ascLon = ascSignIdx * 30;

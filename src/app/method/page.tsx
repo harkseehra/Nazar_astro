@@ -53,7 +53,7 @@ export default function MethodPage() {
           </li>
           <li>
             <span className="text-white font-medium">Dignities:</span> Classical Hellenistic
-            domicile, exaltation, detriment, and fall — from Abu Ma'shar and Vettius Valens. A
+            domicile, exaltation, detriment, and fall — from Abu Ma&apos;shar and Vettius Valens. A
             planet in its domicile or exaltation operates with more clarity. In detriment or fall,
             it works against the grain.
           </li>
@@ -70,13 +70,13 @@ export default function MethodPage() {
         <h2 className="text-lg font-semibold text-white mb-3">The interpretations</h2>
         <p className="mb-4 leading-relaxed">
           After the chart is computed, a Claude AI model (Anthropic) generates the interpretation
-          text — the part that says what today's sky means. The facts (planet, sign, degree, aspect,
+          text — the part that says what today&apos;s sky means. The facts (planet, sign, degree, aspect,
           orb) are fixed and precise. The interpretation layer wraps those facts in language.
         </p>
         <p className="mb-4 leading-relaxed">
           The model is instructed to write in a specific register: direct, honest, rooted in the
           classical tradition. Hard transits are named as hard. Easy ones are named as easy. The
-          voice draws on Hellenistic and classical Islamic astrological principles — Abu Ma'shar,
+          voice draws on Hellenistic and classical Islamic astrological principles — Abu Ma&apos;shar,
           Al-Biruni, Sahl ibn Bishr, Vettius Valens — not modern pop astrology.
         </p>
         <p className="leading-relaxed">
@@ -86,9 +86,9 @@ export default function MethodPage() {
       </section>
 
       <section className="mb-10">
-        <h2 className="text-lg font-semibold text-white mb-3">What we don't do</h2>
+        <h2 className="text-lg font-semibold text-white mb-3">What we don&apos;t do</h2>
         <ul className="space-y-1 leading-relaxed text-[#8A9099]">
-          <li>No birth charts in V1 — this is today's sky, not your sky.</li>
+          <li>No birth charts in V1 — this is today&apos;s sky, not your sky.</li>
           <li>No Vedic or sidereal zodiac.</li>
           <li>No outer planets (Uranus, Neptune, Pluto).</li>
           <li>No asteroids, nodes, or Chiron.</li>
@@ -103,7 +103,7 @@ export default function MethodPage() {
           Hellenistic astrology (c. 1st century BCE–7th century CE) and its classical Islamic
           inheritors (8th–11th century CE) developed a rigorous technical system: whole-sign
           houses, sect, essential dignities, applying and separating aspects, void of course. This
-          is what Nazar uses. Not because it's old — because it's coherent.
+          is what Nazar uses. Not because it&apos;s old — because it&apos;s coherent.
         </p>
       </section>
     </main>

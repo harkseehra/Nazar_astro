@@ -23,20 +23,20 @@ export default function AboutPage() {
         </p>
         <p className="mb-4">
           The name is Arabic, Persian, and Urdu for gaze — the act of seeing clearly, of looking at
-          something without the distortion of wishful thinking. That's the project.
+          something without the distortion of wishful thinking. That&apos;s the project.
         </p>
         <p>
           We use the classical seven planets, the Hellenistic house tradition, and the
-          interpretive principles of Abu Ma'shar, Al-Biruni, and Vettius Valens.
-          Not because it's old — because it's coherent.
+          interpretive principles of Abu Ma&apos;shar, Al-Biruni, and Vettius Valens.
+          Not because it&apos;s old — because it&apos;s coherent.
         </p>
       </section>
 
       <section className="mb-8 leading-relaxed">
         <h2 className="text-lg font-semibold text-white mb-3">What this is</h2>
         <p>
-          A daily snapshot of the sky. Not your personal chart — that's V2. This is today's sky,
-          common to everyone, interpreted in a voice that tells you what's actually happening
+          A daily snapshot of the sky. Not your personal chart — that&apos;s V2. This is today&apos;s sky,
+          common to everyone, interpreted in a voice that tells you what&apos;s actually happening
           rather than what you want to hear.
         </p>
       </section>

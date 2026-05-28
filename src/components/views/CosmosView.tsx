@@ -1,5 +1,5 @@
 'use client';
-import { useRef, useEffect } from 'react';
+import { useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Html } from '@react-three/drei';
 import * as THREE from 'three';
@@ -40,7 +40,6 @@ interface PlanetMeshProps {
 
 function PlanetMesh({ planet, longitude, isRetrograde, isSelected, onClick, showLabel }: PlanetMeshProps) {
   const meshRef = useRef<THREE.Mesh>(null);
-  const orbitRef = useRef<THREE.Group>(null);
   const color = new THREE.Color(PLANET_COLORS[planet]);
   const r = ORBIT_RADII[planet];
   const size = PLANET_SIZES[planet];

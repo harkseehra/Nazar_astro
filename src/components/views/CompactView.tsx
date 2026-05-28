@@ -55,7 +55,7 @@ export function CompactView({ data, houses, onSelectPlanet, selectedPlanet }: Pr
                       <span className="font-medium text-white">{PLANET_LABELS[planet]}</span>
                       <span className="ml-2 text-sm text-white/50">
                         {signGlyph} {signLabel} {pd.signDegree.toFixed(0)}°
-                        {house ? ` · H{house}` : ''}
+                        {house ? ` · H${house}` : ''}
                       </span>
                     </div>
                   </div>
@@ -84,7 +84,7 @@ export function CompactView({ data, houses, onSelectPlanet, selectedPlanet }: Pr
       {data.interpretations.topAspect && (
         <div className="mt-6 px-4 py-4 rounded-xl text-sm leading-relaxed"
           style={{ background: '#2196D408', border: '1px solid #2196D420' }}>
-          <h3 className="text-xs uppercase tracking-widest text-[#2196D4] mb-2">Today's aspect</h3>
+          <h3 className="text-xs uppercase tracking-widest text-[#2196D4] mb-2">Today&apos;s aspect</h3>
           <p style={{ fontFamily: 'Gentium Plus, Georgia, serif', color: '#C8D4DC' }}>
             {data.interpretations.topAspect}
           </p>

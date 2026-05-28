@@ -1,5 +1,5 @@
 import { getDignity, getDignityLabel } from '@/lib/dignities';
-import type { PlanetName, ChartSnapshot, Aspect, TodayJson } from '@/types/astrology';
+import type { PlanetName, ChartSnapshot, Aspect } from '@/types/astrology';
 
 const PLANET_LABELS: Record<PlanetName, string> = {
   sun: 'Sun', moon: 'Moon', mercury: 'Mercury',

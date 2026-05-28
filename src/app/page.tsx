@@ -9,6 +9,8 @@ import { RetrogradeList } from '@/components/chrome/RetrogradeList';
 import { CompactView } from '@/components/views/CompactView';
 import { WheelView } from '@/components/views/WheelView';
 import { PlanetPanel } from '@/components/PlanetPanel';
+import { SaveButton } from '@/components/SaveButton';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import type { ViewMode } from '@/components/ViewToggle';
 import type { PlanetName, TodayJson, ZodiacSign } from '@/types/astrology';
 
@@ -36,6 +38,7 @@ export default function HomePage() {
   const [houses, setHouses] = useState<Partial<Record<PlanetName, number>>>({});
   const [ascendantSign, setAscendantSign] = useState<ZodiacSign | undefined>(undefined);
   const [locationLabel, setLocationLabel] = useState('');
+  const [location, setLocation] = useState({ lat: 0, lon: 0, label: '' });
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -63,6 +66,7 @@ export default function HomePage() {
         const locRes = await fetch('/api/location');
         const loc = await locRes.json();
         setLocationLabel(loc.label ?? '');
+        setLocation({ lat: loc.lat ?? 0, lon: loc.lon ?? 0, label: loc.label ?? '' });
 
         const houseRes = await fetch(`/api/houses?lat=${loc.lat}&lon=${loc.lon}`);
         const houseData = await houseRes.json();
@@ -99,7 +103,7 @@ export default function HomePage() {
     return (
       <div className="fixed inset-0 flex items-center justify-center flex-col gap-3" style={{ background: '#0A0E14' }}>
         <p className="text-white/40">Chart unavailable.</p>
-        <p className="text-white/20 text-sm">The daily snapshot hasn't been generated yet.</p>
+        <p className="text-white/20 text-sm">The daily snapshot hasn&apos;t been generated yet.</p>
         <p className="text-white/20 text-xs mt-2">
           Call <code className="text-[#2196D4]">/api/cron/generate-today</code> to generate it.
         </p>
@@ -113,24 +117,26 @@ export default function HomePage() {
     <div className="relative w-full min-h-screen" style={{ background: '#0A0E14' }}>
       <TopBar viewMode={viewMode} onViewChange={handleViewChange} locationLabel={locationLabel} />
 
-      {/* Main view */}
-      {viewMode === 'cosmos' && (
-        <CosmosView data={today} onSelectPlanet={handleSelectPlanet} selectedPlanet={selectedPlanet} />
-      )}
-      {viewMode === 'wheel' && (
-        <div className="fixed inset-0 flex items-center justify-center pt-12">
-          <WheelView
-            data={today} houses={houses} ascendantSign={ascendantSign}
+      {/* Main view — wrapped in error boundary so a Three.js crash doesn't kill the page */}
+      <ErrorBoundary>
+        {viewMode === 'cosmos' && (
+          <CosmosView data={today} onSelectPlanet={handleSelectPlanet} selectedPlanet={selectedPlanet} />
+        )}
+        {viewMode === 'wheel' && (
+          <div className="fixed inset-0 flex items-center justify-center pt-12">
+            <WheelView
+              data={today} houses={houses} ascendantSign={ascendantSign}
+              onSelectPlanet={handleSelectPlanet} selectedPlanet={selectedPlanet}
+            />
+          </div>
+        )}
+        {viewMode === 'compact' && (
+          <CompactView
+            data={today} houses={houses}
             onSelectPlanet={handleSelectPlanet} selectedPlanet={selectedPlanet}
           />
-        </div>
-      )}
-      {viewMode === 'compact' && (
-        <CompactView
-          data={today} houses={houses}
-          onSelectPlanet={handleSelectPlanet} selectedPlanet={selectedPlanet}
-        />
-      )}
+        )}
+      </ErrorBoundary>
 
       {/* Always-visible chrome overlay (top-right of canvas) */}
       {viewMode !== 'compact' && (
@@ -155,8 +161,12 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="fixed bottom-0 left-0 right-0 z-30 flex items-center justify-between px-5 py-2 text-xs text-white/20"
         style={{ background: 'linear-gradient(to top, #0A0E14dd, transparent)' }}>
-        <Link href="/about" className="hover:text-white/50 transition-colors">about</Link>
-        <Link href="/method" className="hover:text-white/50 transition-colors">method</Link>
+        <div className="flex items-center gap-4">
+          <Link href="/about" className="hover:text-white/50 transition-colors">about</Link>
+          <Link href="/method" className="hover:text-white/50 transition-colors">method</Link>
+          <Link href="/saved" className="hover:text-white/50 transition-colors">saved</Link>
+        </div>
+        <SaveButton today={today} houses={houses} ascendantSign={ascendantSign} location={location} />
       </footer>
     </div>
   );

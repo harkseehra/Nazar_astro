@@ -41,6 +41,7 @@ export async function GET(request: Request) {
     // Strip 'house' — house is recomputed client-side per user location
     const planets = Object.fromEntries(
       Object.entries(chart.planets).map(([name, data]) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { house: _house, ...rest } = data;
         return [name, rest];
       })

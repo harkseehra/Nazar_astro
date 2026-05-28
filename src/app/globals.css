@@ -3,9 +3,9 @@
 @tailwind utilities;
 
 :root {
-  --font-inter: 'Inter', system-ui, sans-serif;
-  --font-gentium: 'Gentium Plus', Georgia, serif;
-  --font-vazir: 'Vazirmatn', sans-serif;
+  --font-inter: var(--font-inter, 'Inter', system-ui, sans-serif);
+  --font-gentium: var(--font-gentium, 'Gentium Plus', Georgia, serif);
+  --font-vazir: var(--font-vazir, 'Vazirmatn', sans-serif);
   --bg: #0A0E14;
   --accent: #2196D4;
   --text: #E8ECF0;
