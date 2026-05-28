@@ -1,0 +1,41 @@
+{
+  "generatedAt": "2026-05-28T06:00:00.000Z",
+  "validUntil": "2026-05-29T06:00:00.000Z",
+  "planets": {
+    "sun":     { "sign": "gemini",      "signDegree": 6.9425,  "absoluteLongitude": 66.9425,  "isRetrograde": false, "speed": 0.959505 },
+    "moon":    { "sign": "scorpio",     "signDegree": 2.5917,  "absoluteLongitude": 212.5917, "isRetrograde": false, "speed": 12.123431 },
+    "mercury": { "sign": "gemini",      "signDegree": 22.3852, "absoluteLongitude": 82.3852,  "isRetrograde": false, "speed": 1.887394 },
+    "venus":   { "sign": "cancer",      "signDegree": 10.9583, "absoluteLongitude": 100.9583, "isRetrograde": false, "speed": 1.18538 },
+    "mars":    { "sign": "taurus",      "signDegree": 6.9743,  "absoluteLongitude": 36.9743,  "isRetrograde": false, "speed": 0.744466 },
+    "jupiter": { "sign": "cancer",      "signDegree": 23.3684, "absoluteLongitude": 113.3684, "isRetrograde": false, "speed": 0.184111 },
+    "saturn":  { "sign": "aries",       "signDegree": 11.9199, "absoluteLongitude": 11.9199,  "isRetrograde": false, "speed": 0.088658 }
+  },
+  "aspects": [
+    { "from": "sun",     "to": "mercury", "type": "conjunction", "orb": 0.4, "isApplying": false, "exactAt": null },
+    { "from": "venus",   "to": "jupiter", "type": "conjunction", "orb": 1.1, "isApplying": true,  "exactAt": "2026-05-30T12:00:00.000Z" },
+    { "from": "moon",    "to": "saturn",  "type": "square",      "orb": 2.8, "isApplying": false, "exactAt": null },
+    { "from": "mars",    "to": "saturn",  "type": "sextile",     "orb": 5.1, "isApplying": false, "exactAt": null }
+  ],
+  "moonPhase": {
+    "phaseName": "waxing_crescent",
+    "illumination": 0.12,
+    "nextPhase": { "name": "first_quarter", "at": "2026-06-02T03:41:00.000Z" }
+  },
+  "voidOfCourse": {
+    "isVoidNow": false,
+    "nextVoidStart": null,
+    "nextVoidEnd": null
+  },
+  "retrogrades": [],
+  "interpretations": {
+    "overall": "The Sun and Mercury are tightly conjunct in Gemini — the mind is quick today, words come easily, and conversations that started yesterday are still live. Venus and Jupiter are building toward each other in Cancer; that warmth you're noticing in your close relationships is real, not imagined. Stay in it.",
+    "topAspect": "Venus and Jupiter apply toward conjunction in Cancer — the most hospitable sign for both. This is genuine ease in matters of home, loyalty, and care. It doesn't ask you to do anything; it just opens a door. Walk through it or don't.",
+    "sun": "Sun at 6° Gemini, moving direct at average speed, peregrine. The Sun in Gemini wants to engage with everything at once — the risk is spreading yourself across five conversations and finishing none. Today favours the one thing you've been meaning to say clearly.",
+    "moon": "Moon at 2° Scorpio, applying square to Saturn in Aries. The emotional register deepens in the first half of the day. The square to Saturn arrives as a subtle resistance — not dramatic, just the sense that what you want requires more from you than you'd like. That's accurate.",
+    "mercury": "Mercury at 22° Gemini, in domicile, moving fast. Mercury is at home here and running. Contracts, messages, plans — anything that needs to be communicated has Mercury's full cooperation today. Watch for the tendency to agree to things you haven't fully read.",
+    "venus": "Venus at 10° Cancer, applying conjunction to Jupiter. Venus in Cancer is already inclined toward nourishment and protection. Jupiter amplifies this over the next two days. If you've been withholding warmth, now is the time to give it without counting.",
+    "mars": "Mars at 6° Taurus, moving at average speed, peregrine. Mars in Taurus is deliberate rather than fast — it finishes things rather than starts them. The energy for sustained, physical, methodical work is high. Don't waste it on urgency that isn't yours.",
+    "jupiter": "Jupiter at 23° Cancer, in exaltation. Jupiter exalted in Cancer expands the domestic sphere — generosity in the home, with family, with people you've chosen to keep close. This is a long transit; its effect is cumulative. Today it's simply present.",
+    "saturn": "Saturn at 11° Aries, direct, in fall. Saturn in fall in Aries is not entirely comfortable — it brings discipline into a sign that wants none. The square from the Moon today sharpens this: feelings and structure are briefly at odds. Let the structure win."
+  }
+}

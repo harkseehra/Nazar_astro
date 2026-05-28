@@ -3,25 +3,22 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --font-inter: 'Inter', system-ui, sans-serif;
+  --font-gentium: 'Gentium Plus', Georgia, serif;
+  --font-vazir: 'Vazirmatn', sans-serif;
+  --bg: #0A0E14;
+  --accent: #2196D4;
+  --text: #E8ECF0;
+  --muted: #8A9099;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-}
+html, body { height: 100%; background: var(--bg); color: var(--text); }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-}
+.font-gentium { font-family: var(--font-gentium); }
+.font-vazir   { font-family: var(--font-vazir); }
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #2196D440; border-radius: 2px; }
