@@ -50,7 +50,7 @@ export default function HomePage() {
 
   // Load today.json
   useEffect(() => {
-    fetch('/data/today.json')
+    fetch('/api/today')
       .then((r) => r.json())
       .then((data: TodayJson) => {
         setToday(data);

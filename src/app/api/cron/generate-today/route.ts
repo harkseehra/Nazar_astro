@@ -5,11 +5,10 @@ import { computeChart, computeAspects, moonPhase, isVoidOfCourse } from '@/lib/e
 import { generateInterpretations } from '@/lib/interpret/claudeClient';
 import type { TodayJson, PlanetName } from '@/types/astrology';
 
-// Vercel cron auth — only Vercel scheduler should call this
 function isAuthorised(request: Request): boolean {
   const authHeader = request.headers.get('authorization');
   const secret = process.env.CRON_SECRET;
-  if (!secret) return true; // dev: allow unauthenticated
+  if (!secret) return true;
   return authHeader === `Bearer ${secret}`;
 }
 
@@ -19,26 +18,16 @@ export async function GET(request: Request) {
   }
 
   try {
-    // Daily snapshot at 06:00 UTC, geocentric (0°, 0°)
     const now = new Date();
     const snapshotDate = new Date(Date.UTC(
-      now.getUTCFullYear(),
-      now.getUTCMonth(),
-      now.getUTCDate(),
-      6, 0, 0,
+      now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 6, 0, 0,
     ));
 
-    const chart = computeChart({
-      datetime: snapshotDate,
-      latitude: 0,
-      longitude: 0,
-    });
-
+    const chart = computeChart({ datetime: snapshotDate, latitude: 0, longitude: 0 });
     const aspects = computeAspects(chart);
     const phase = moonPhase(snapshotDate);
     const voc = isVoidOfCourse(snapshotDate);
 
-    // Strip 'house' — house is recomputed client-side per user location
     const planets = Object.fromEntries(
       Object.entries(chart.planets).map(([name, data]) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -54,13 +43,7 @@ export async function GET(request: Request) {
     const validUntil = new Date(snapshotDate);
     validUntil.setUTCDate(validUntil.getUTCDate() + 1);
 
-    // Generate Claude interpretations — fails gracefully, never breaks the chart
-    const interpretations = await generateInterpretations(
-      chart,
-      aspects,
-      snapshotDate,
-      retrogrades,
-    );
+    const interpretations = await generateInterpretations(chart, aspects, snapshotDate, retrogrades);
 
     const today: TodayJson = {
       generatedAt: snapshotDate.toISOString(),
@@ -77,16 +60,24 @@ export async function GET(request: Request) {
       interpretations,
     };
 
-    const dataDir = join(process.cwd(), 'public', 'data');
-    await mkdir(dataDir, { recursive: true });
-    await writeFile(join(dataDir, 'today.json'), JSON.stringify(today, null, 2), 'utf8');
+    const json = JSON.stringify(today, null, 2);
+
+    // /tmp is always writable on Vercel serverless; public/data works in dev
+    const tmpPath = join('/tmp', 'today.json');
+    await writeFile(tmpPath, json, 'utf8');
+
+    // Best-effort write to public/data (succeeds in dev, silently skipped in prod)
+    try {
+      const publicDir = join(process.cwd(), 'public', 'data');
+      await mkdir(publicDir, { recursive: true });
+      await writeFile(join(publicDir, 'today.json'), json, 'utf8');
+    } catch {
+      // Expected in Vercel prod — read-only deployment bundle
+    }
 
     return NextResponse.json({ ok: true, generatedAt: today.generatedAt });
   } catch (err) {
     console.error('[generate-today]', err);
-    return NextResponse.json(
-      { error: 'Chart generation failed', detail: String(err) },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Chart generation failed', detail: String(err) }, { status: 500 });
   }
 }
